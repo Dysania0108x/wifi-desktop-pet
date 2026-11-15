@@ -18,5 +18,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: wifi-desktop-pet-macos
-          path: dist/*.dmg
+          path: |
+            dist/*.dmg
+            dist/*.zip
           if-no-files-found: error
