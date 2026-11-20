@@ -1,0 +1,59 @@
+{
+  "name": "wifi-desktop-pet",
+  "version": "0.5.0",
+  "private": true,
+  "description": "WiFi, a tiny Mac desktop companion",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "concurrently -k \"vite --host 127.0.0.1\" \"wait-on http://127.0.0.1:5173 && electron .\"",
+    "build": "tsc --noEmit && vite build && electron-builder --mac --dir",
+    "dist": "tsc --noEmit && vite build && electron-builder --mac",
+    "test": "node --test test/*.test.cjs"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.5",
+    "wait-on": "^8.0.1"
+  },
+  "build": {
+    "appId": "com.wifi.desktop-pet",
+    "productName": "WiFi Desktop Pet",
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
+      "category": "public.app-category.entertainment",
+      "identity": "-",
+      "hardenedRuntime": false
+    },
+    "directories": {
+      "output": "release"
+    }
+  }
+}
