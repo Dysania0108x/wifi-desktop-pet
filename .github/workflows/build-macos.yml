@@ -12,17 +12,23 @@ jobs:
         with:
           node-version: '22'
       - run: npm install
+      - run: npm test
       - name: Package app without publishing
-        run: npm run build -- --publish never
+        run: npm run build -- --arm64 --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
       - name: Sign test app and verify bundle
         shell: bash
         run: |
           set -euo pipefail
-          APP="dist/mac-arm64/WiFi Desktop Pet.app"
+          APP="release/mac-arm64/WiFi Desktop Pet.app"
           test -d "$APP/Contents/Resources"
-          test -f "$APP/Contents/Resources/app.asar"
+          ASAR="$APP/Contents/Resources/app.asar"
+          test -f "$ASAR"
+          npx --no-install asar list "$ASAR" > asar-files.txt
+          for entry in /dist/index.html /dist/sprites/wifi-v3/stand.png /dist/sprites/wifi-v3/sniff-2.png /electron/main.cjs; do
+            grep -Fx "$entry" asar-files.txt
+          done
           # Sign the nested Electron components, then the containing bundle.
           find "$APP/Contents/Frameworks" -type d -name '*.app' -prune -print0 | while IFS= read -r -d '' nested; do
             codesign --force --deep --sign - "$nested"
@@ -35,11 +41,11 @@ jobs:
           codesign -dv --verbose=4 "$APP" 2>&1
       - name: Archive verified app with macOS metadata
         run: |
-          ditto -c -k --sequesterRsrc --keepParent "dist/mac-arm64/WiFi Desktop Pet.app" "dist/WiFi-Desktop-Pet-mac-arm64-verified.zip"
-          ditto -x -k "dist/WiFi-Desktop-Pet-mac-arm64-verified.zip" "dist/verify-extracted"
-          codesign --verify --deep --strict --verbose=2 "dist/verify-extracted/WiFi Desktop Pet.app"
+          ditto -c -k --sequesterRsrc --keepParent "release/mac-arm64/WiFi Desktop Pet.app" "release/WiFi-Desktop-Pet-mac-arm64-verified.zip"
+          ditto -x -k "release/WiFi-Desktop-Pet-mac-arm64-verified.zip" "release/verify-extracted"
+          codesign --verify --deep --strict --verbose=2 "release/verify-extracted/WiFi Desktop Pet.app"
       - uses: actions/upload-artifact@v4
         with:
           name: wifi-desktop-pet-macos-verified
-          path: dist/WiFi-Desktop-Pet-mac-arm64-verified.zip
+          path: release/WiFi-Desktop-Pet-mac-arm64-verified.zip
           if-no-files-found: error

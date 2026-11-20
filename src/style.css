@@ -1,1 +1,68 @@
-*{box-sizing:border-box}html,body,#root{margin:0;width:100%;height:100%;overflow:hidden;background:transparent;font-family:ui-rounded,system-ui,sans-serif;user-select:none}.pet-shell{position:relative;width:220px;height:230px;background:transparent}.drag-handle{position:absolute;top:10px;left:75px;width:70px;height:23px;border-radius:20px;background:#f9f4eddf;color:#766a77;text-align:center;line-height:23px;font-size:14px;-webkit-app-region:drag;cursor:grab}.menu{position:absolute;top:10px;right:13px;border:0;border-radius:14px;background:#f9f4edee;color:#766a77;padding:3px 9px;cursor:pointer;z-index:2}.pet{position:absolute;top:32px;left:15px;width:190px;height:160px;background:transparent;border:0;padding:0;cursor:pointer;-webkit-app-region:no-drag}.dog{width:100%;height:100%;image-rendering:pixelated;filter:drop-shadow(0 4px 1px #3332)}.dog.walking{animation:bob .65s steps(2) infinite}.dog.happy{animation:bob .2s steps(2) 3}.dog.sleep{transform:translateY(12px) scaleY(.84);transform-origin:center bottom}.tail{transform-origin:38px 72px;animation:wag .55s steps(2) infinite}.status{position:absolute;bottom:9px;left:28px;right:28px;padding:5px 10px;border-radius:14px;text-align:center;background:#f9f4ede8;color:#564d5e;font-size:12px;pointer-events:none}.status span{float:right;color:#b26d87}@keyframes bob{50%{transform:translateY(-4px)}}@keyframes wag{50%{transform:rotate(8deg)}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important}}
+* { box-sizing: border-box; }
+html, body, #root, .pet-shell { width: 100%; height: 100%; margin: 0; overflow: hidden; background: transparent; }
+body { user-select: none; font-family: ui-rounded, system-ui, sans-serif; }
+.pet-shell { display: grid; place-items: center; }
+.pet { width: 178px; height: 155px; padding: 0; border: 0; outline: none; background: transparent; cursor: grab; touch-action: none; }
+.pet.dragging { cursor: grabbing; }
+.pet.keyboard:focus-visible { outline: 2px solid #84a1c3; outline-offset: -7px; border-radius: 20px; }
+.orientation { display: block; width: 100%; height: 100%; pointer-events: none; }
+.orientation.faces-left { transform: scaleX(-1); }
+.dog { display: block; width: 100%; height: 100%; object-fit: contain; pointer-events: none; filter: drop-shadow(0 2px 2px #25252530); transform-origin: 50% 88%; }
+.dog.breathing { animation: breathe 3.4s ease-in-out infinite; }
+.dog.settled { animation: breathe 4s ease-in-out infinite; }
+@keyframes breathe { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.025); } }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .dog { animation: none !important; } }
+
+.pet-shell { position: relative; --direction: 1; }
+.pet-shell[data-direction="left"] { --direction: -1; }
+.pet-shell[data-care] .pet {
+  transform: translateX(calc(var(--shift, 0px) * var(--direction)));
+  transition: transform var(--travel-time, 350ms) ease-out;
+}
+.pet-shell[data-care="ball"][data-phase="ready"] { --shift: -30px; --travel-time: 400ms; }
+.pet-shell[data-care="ball"][data-phase="chase"] { --shift: 17px; --travel-time: 1080ms; }
+.pet-shell[data-care="ball"][data-phase="touch"] { --shift: 17px; }
+.pet-shell[data-care="ball"][data-phase="return"] { --shift: 0px; --travel-time: 700ms; }
+.pet-shell[data-care]:not([data-care="ball"])[data-phase="arrive"] { --shift: 6px; --travel-time: 520ms; }
+.pet-shell[data-care]:not([data-care="ball"])[data-phase="inspect"],
+.pet-shell[data-care]:not([data-care="ball"])[data-phase="bite"],
+.pet-shell[data-care]:not([data-care="ball"])[data-phase="lap"] { --shift: 6px; }
+.care-prop {
+  position: absolute; z-index: 1; pointer-events: none;
+  left: 50%; bottom: 20px;
+  transform: translateX(calc(-50% + var(--prop-offset, 0px) * var(--direction)));
+}
+.care-prop svg { display: block; width: 100%; height: auto; }
+.care-prop.tennis {
+  --prop-offset: 37px; width: 25px; bottom: 26px;
+  transition: transform 560ms cubic-bezier(.2,.7,.25,1), opacity 500ms;
+  filter: drop-shadow(0 2px 1px #33333334);
+}
+[data-phase="chase"] .tennis, [data-phase="touch"] .tennis, [data-phase="return"] .tennis, [data-phase="finish"] .tennis { --prop-offset: 84px; }
+[data-phase="chase"] .tennis svg { animation: roll 560ms ease-out; }
+[data-phase="touch"] .tennis svg { animation: ball-touch 450ms ease-out; }
+[data-phase="finish"] .tennis { opacity: 0; }
+.care-prop.dish { --prop-offset: 79px; width: 44px; bottom: 23px; transition: opacity 650ms; }
+[data-phase="finish"] .dish { opacity: .4; }
+.water-rings { opacity: 0; transform-origin: 50% 40%; }
+[data-phase="lap"] .water-rings { animation: spread 525ms ease-out infinite; }
+[data-phase="bite"] .kibble { animation: eaten 1.5s steps(4, end) forwards; }
+[data-phase="finish"] .kibble { opacity: 0; }
+[data-phase="bite"] .dog { animation: chew 325ms ease-in-out infinite; }
+[data-phase="lap"] .dog { animation: lap 440ms ease-in-out infinite; }
+@keyframes roll { from { transform: rotate(0); } to { transform: rotate(calc(250deg * var(--direction))); } }
+@keyframes ball-touch { 0%, 100% { translate: 0 0; } 50% { translate: calc(3px * var(--direction)) -2px; } }
+@keyframes eaten { from { opacity: 1; } to { opacity: 0; } }
+@keyframes spread { from { opacity: 1; scale: .4; } to { opacity: 0; scale: 1.08; } }
+@keyframes chew { 0%, 100% { transform: rotate(0deg); } 55% { transform: rotate(1.8deg) scaleY(.985); } }
+@keyframes lap { 0%, 100% { transform: rotate(0deg); } 60% { transform: rotate(2deg) translateY(1.5px); } }
+@media (prefers-reduced-motion: reduce) {
+  .pet-shell[data-care] .pet, .care-prop { transition: none !important; }
+  .care-prop *, .dog { animation: none !important; }
+  [data-phase="lap"] .water-rings { opacity: .7; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pet-shell[data-care] .pet { transform: none; }
+  .pet-shell[data-care="ball"] .tennis { --prop-offset: 70px; }
+}
